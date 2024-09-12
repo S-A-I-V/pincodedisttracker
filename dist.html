@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distance Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 10px;
+            color: #333;
+            font-size: 18px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Distance Calculator</h1>
+    <label for="fromPincode">From Pincode:</label>
+    <input type="text" id="fromPincode" placeholder="Enter From Pincode">
+
+    <label for="toPincode">To Pincode:</label>
+    <input type="text" id="toPincode" placeholder="Enter To Pincode">
+
+    <button onclick="getDistance()">Get Distance</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    const openCageApiKey = '6152f15cb29943278b9064d851553d5c'; // Replace with your OpenCage API key
+    const openRouteServiceApiKey = '5b3ce3597851110001cf6248cd7434a62fe44ccc8e8f53ca77d651ef';
+
+    function getDistance() {
+        const fromPincode = document.getElementById('fromPincode').value;
+        const toPincode = document.getElementById('toPincode').value;
+        const resultDiv = document.getElementById('result');
+
+        if (fromPincode === '' || toPincode === '') {
+            resultDiv.innerHTML = "Please enter both pin codes.";
+            return;
+        }
+
+        // Step 1: Get coordinates for the "From" pincode
+        getCoordinates(fromPincode)
+            .then(fromCoords => {
+                // Step 2: Get coordinates for the "To" pincode
+                return getCoordinates(toPincode)
+                    .then(toCoords => ({ fromCoords, toCoords }));
+            })
+            .then(({ fromCoords, toCoords }) => {
+                // Step 3: Call OpenRouteService API to get the distance
+                const from = `${fromCoords.lng},${fromCoords.lat}`;
+                const to = `${toCoords.lng},${toCoords.lat}`;
+                const apiUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${openRouteServiceApiKey}&start=${from}&end=${to}`;
+
+                return fetch(apiUrl);
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Extract distance in kilometers
+                const distance = data.routes[0].summary.distance / 1000; // Convert meters to kilometers
+                resultDiv.innerHTML = `Distance: ${distance.toFixed(2)} km`;
+            })
+            .catch(error => {
+                resultDiv.innerHTML = "Unable to fetch the distance. Please check the pin codes.";
+                console.error(error);
+            });
+    }
+
+    // Function to get coordinates (lat, lng) for a given pincode using OpenCage Geocoding API
+    function getCoordinates(pincode) {
+        const geocodeUrl = `https://api.opencagedata.com/geocode/v1/json?q=${pincode}&key=${openCageApiKey}`;
+
+        return fetch(geocodeUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.results.length === 0) {
+                    throw new Error("Invalid pincode");
+                }
+                const coords = data.results[0].geometry;
+                return { lat: coords.lat, lng: coords.lng };
+            });
+    }
+</script>
+
+</body>
+</html>
