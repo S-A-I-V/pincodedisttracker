@@ -1,3 +1,5 @@
+# api/index.py
+
 from flask import Flask, request, jsonify, render_template_string
 import pgeocode
 from geopy.distance import geodesic
@@ -93,7 +95,7 @@ html_content = '''
         }
 
         // Fetch distance from the server
-        fetch(`/get_distance?from=${fromPincode}&to=${toPincode}`)
+        fetch(`/api/get_distance?from=${fromPincode}&to=${toPincode}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -117,7 +119,7 @@ html_content = '''
 def index():
     return render_template_string(html_content)
 
-@app.route('/get_distance', methods=['GET'])
+@app.route('/api/get_distance', methods=['GET'])
 def get_distance():
     from_pincode = request.args.get('from')
     to_pincode = request.args.get('to')
@@ -138,5 +140,6 @@ def get_distance():
 
     return jsonify({'distance': distance})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# This is required for Vercel to work correctly
+def handler(environ, start_response):
+    return app(environ, start_response)
