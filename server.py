@@ -138,3 +138,5 @@ def get_distance():
 
     return jsonify({'distance': distance})
 
+if __name__ == '__main__':
+    app.run(debug=True)
