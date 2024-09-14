@@ -1,3 +1,12 @@
+from flask import Flask, request, jsonify, render_template_string
+import pgeocode
+from geopy.distance import geodesic
+
+app = Flask(__name__)
+nomi = pgeocode.Nominatim('IN')  # Using 'IN' for India
+
+# HTML content to serve
+html_content = '''
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -102,3 +111,32 @@
 
 </body>
 </html>
+'''
+
+@app.route('/')
+def index():
+    return render_template_string(html_content)
+
+@app.route('/get_distance', methods=['GET'])
+def get_distance():
+    from_pincode = request.args.get('from')
+    to_pincode = request.args.get('to')
+
+    # Get coordinates for the pin codes
+    from_location = nomi.query_postal_code(from_pincode)
+    to_location = nomi.query_postal_code(to_pincode)
+
+    if from_location.latitude is None or to_location.latitude is None:
+        return jsonify({'error': 'Invalid pincode'}), 400
+
+    # Extract latitude and longitude
+    from_coords = (from_location.latitude, from_location.longitude)
+    to_coords = (to_location.latitude, to_location.longitude)
+
+    # Calculate the distance in kilometers
+    distance = geodesic(from_coords, to_coords).kilometers
+
+    return jsonify({'distance': distance})
+
+if __name__ == '__main__':
+    app.run(debug=True)
