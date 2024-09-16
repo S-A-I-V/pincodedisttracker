@@ -52,7 +52,7 @@ html_content = '''
             color: #666;
         }
         input[type="text"] {
-            width: 100%;
+            width: 95%;
             padding: 8px;
             margin-bottom: 10px;
             border: 1px solid #ccc;
