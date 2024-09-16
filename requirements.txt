@@ -1,4 +1,4 @@
 Flask
-pgeocode
-geopy
 flask-cors
+geopy
+requests

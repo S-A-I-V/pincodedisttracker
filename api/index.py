@@ -1,15 +1,22 @@
 from flask import Flask, request, jsonify, render_template_string
-import pgeocode
 from geopy.distance import geodesic
 from flask_cors import CORS
+import requests
 
 app = Flask(__name__)
+CORS(app)  # Enable CORS for all routes
 
-# Enable CORS
-CORS(app)
+# Your OpenCage API key
+OPEN_CAGE_API_KEY = '6152f15cb29943278b9064d851553d5c'
 
-# Initialize pgeocode for India
-nomi = pgeocode.Nominatim('IN')
+def get_coords(pincode):
+    url = f'https://api.opencagedata.com/geocode/v1/json?q={pincode}&key={OPEN_CAGE_API_KEY}&countrycode=IN'
+    response = requests.get(url)
+    data = response.json()
+    if data['results']:
+        coords = data['results'][0]['geometry']
+        return coords['lat'], coords['lng']
+    return None, None
 
 # HTML content to serve
 html_content = '''
@@ -128,16 +135,16 @@ def get_distance():
     from_pincode = request.args.get('from')
     to_pincode = request.args.get('to')
 
-    # Get coordinates for the pin codes
-    from_location = nomi.query_postal_code(from_pincode)
-    to_location = nomi.query_postal_code(to_pincode)
+    # Get coordinates for the pin codes using OpenCage API
+    from_lat, from_lng = get_coords(from_pincode)
+    to_lat, to_lng = get_coords(to_pincode)
 
-    if from_location.latitude is None or to_location.latitude is None:
+    if from_lat is None or to_lat is None:
         return jsonify({'error': 'Invalid pincode'}), 400
 
     # Extract latitude and longitude
-    from_coords = (from_location.latitude, from_location.longitude)
-    to_coords = (to_location.latitude, to_location.longitude)
+    from_coords = (from_lat, from_lng)
+    to_coords = (to_lat, to_lng)
 
     # Calculate the distance in kilometers
     distance = geodesic(from_coords, to_coords).kilometers
