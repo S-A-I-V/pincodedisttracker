@@ -2,15 +2,14 @@ from flask import Flask, request, jsonify, render_template_string
 import pgeocode
 from geopy.distance import geodesic
 from flask_cors import CORS
-import tempfile
 
 app = Flask(__name__)
 
 # Enable CORS
 CORS(app)
 
-# Using 'IN' for India and setting up a temporary directory
-nomi = pgeocode.Nominatim('IN', data_dir=tempfile.gettempdir()) 
+# Initialize pgeocode for India
+nomi = pgeocode.Nominatim('IN')
 
 # HTML content to serve
 html_content = '''
