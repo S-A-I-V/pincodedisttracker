@@ -4,9 +4,7 @@ from flask_cors import CORS
 import requests
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-
-# Your OpenCage API key
+CORS(app)  
 OPEN_CAGE_API_KEY = '6152f15cb29943278b9064d851553d5c'
 
 def get_coords(pincode):
@@ -18,7 +16,6 @@ def get_coords(pincode):
         return coords['lat'], coords['lng']
     return None, None
 
-# HTML content to serve
 html_content = '''
 <!DOCTYPE html>
 <html lang="en">
@@ -135,18 +132,15 @@ def get_distance():
     from_pincode = request.args.get('from')
     to_pincode = request.args.get('to')
 
-    # Get coordinates for the pin codes using OpenCage API
     from_lat, from_lng = get_coords(from_pincode)
     to_lat, to_lng = get_coords(to_pincode)
 
     if from_lat is None or to_lat is None:
         return jsonify({'error': 'Invalid pincode'}), 400
 
-    # Extract latitude and longitude
     from_coords = (from_lat, from_lng)
     to_coords = (to_lat, to_lng)
 
-    # Calculate the distance in kilometers
     distance = geodesic(from_coords, to_coords).kilometers
 
     return jsonify({'distance': distance})
